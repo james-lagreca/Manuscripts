@@ -68,11 +68,11 @@ binCenters_ESI = sqrt(logBinEdges_ESI(1:end-1) .* logBinEdges_ESI(2:end));
 binnedESI = nan(size(binCenters_ESI));
 binnedESI_std = nan(size(binCenters_ESI));
 
-% Calculate mean ESI and standard deviation for each bin
+% Calculate median ESI and standard deviation for each bin
 for i = 1:length(binCenters_ESI)
     inBin = (binIndices_ESI == i);
     if any(inBin)
-        binnedESI(i) = mean(ESI_filtered(inBin));
+        binnedESI(i) = median(ESI_filtered(inBin));
         binnedESI_std(i) = std(ESI_filtered(inBin));
     end
 end
@@ -168,6 +168,18 @@ residualsStd_eq = std(residuals_eq);
 ESI_fitted_upper_eq = ESI_fitted_eq + residualsStd_eq;
 ESI_fitted_lower_eq = ESI_fitted_eq - residualsStd_eq;
 
+% Read the data from the CSV file
+attenuationData = readtable('C:\Users\Admin\OneDrive - The University of Melbourne\PhD\Woods Point\EEE Paper\Data\WP_attenuation_results.csv');
+
+% Extract rjb and different MMI models
+rjb = attenuationData.rjb;
+AW07_CEUS = attenuationData.AW07_CEUS;
+AW07_CA = attenuationData.AW07_CA;
+L15_AU = attenuationData.L15_AU;
+WWW14_CA = attenuationData.WWW14_CA;
+WWW14_CEUS = attenuationData.WWW14_CEUS;
+
+
 % Plotting combined data (First Figure)
 figure;
 hold on;
@@ -220,25 +232,41 @@ h_dummy_fill_ESI = patch(NaN, NaN, 'r', 'FaceAlpha', 0.2, 'EdgeColor', 'none', '
 % Plot MMI_PGV as green solid line
 %plot(rjb_PGV_sorted, MMI_PGV_sorted, 'g-', 'LineWidth', 1.5, 'DisplayName', 'MMI (from PGV)');
 
+% Plot attenuation models from Python
+AW07_CEUS = plot(rjb, AW07_CEUS, 'Color', [0.5 0.2 0.8], 'LineWidth', 1.5, 'DisplayName', 'AW07 CEUS'); % Purple with circle markers
+hold on;
+
+% Plot the other models that were commented out
+%AW07_CA = plot(rjb, AW07_CA, '-^', 'Color', [0.1 0.7 0.8], 'LineWidth', 1.5, 'DisplayName', 'AW07 CA'); % Cyan with triangle-up markers
+
+% Continue with the rest of the plots
+L15AU = plot(rjb, L15_AU, 'Color', [0.2 0.7 0.2], 'LineWidth', 1.5, 'DisplayName', 'L15 AU'); % Green with square markers
+
+%WWW14_CA = plot(rjb, WWW14_CA, '-+', 'Color', [0.8 0.2 0.2], 'LineWidth', 1.5, 'DisplayName', 'WWW14 CA'); % Red with plus markers
+
+WWW14CEUS = plot(rjb, WWW14_CEUS, 'Color', [0.9 0.6 0.1], 'LineWidth', 1.5, 'DisplayName', 'WWW14 CEUS'); % Orange with diamond markers
+
+
 % Set axis labels, title, and legend
 xlabel('R_{jb} (km)', 'FontSize', 12);
 ylabel('Intensity Level', 'FontSize', 12);
 title('Attenuation of ESI and MMI', 'FontSize', 14);
 
 % Create custom legend with the desired order
-legend([h_scatter_MMI, h_scatter_ESI, h_binned_MMI, h_binned_ESI, h_plot_MMI, h_plot_ESI, h_dummy_fill_MMI, h_dummy_fill_ESI],...
-       {'Raw MMI', 'Raw ESI', 'Binned MMI with Std Dev', 'Binned ESI with Std Dev', 'Fitted MMI Curve', 'Fitted ESI Curve', '±1 Std Dev MMI', '±1 Std Dev ESI'},...
+legend([h_scatter_MMI, h_scatter_ESI, h_binned_MMI, h_binned_ESI, h_plot_MMI, h_plot_ESI, h_dummy_fill_MMI, h_dummy_fill_ESI, AW07_CEUS, L15AU, WWW14CEUS],...
+       {'Raw MMI', 'Raw ESI', 'Binned MMI with Std Dev', 'Binned ESI with Std Dev', 'Fitted MMI Curve', 'Fitted ESI Curve', '±1 Std Dev MMI', '±1 Std Dev ESI', 'AW07 CEUS', 'L15 AU', 'WWW14 CEUS'},...
        'Location', 'northeast');
 
 % Set logarithmic x-axis
 set(gca, 'XScale', 'log');
 
 % Set axes limits
-xlim([min([logBinEdges_MMI, logBinEdges_ESI]), max([logBinEdges_MMI, logBinEdges_ESI])]);
+xlim([min([logBinEdges_MMI, logBinEdges_ESI]), max([1000])]);
 ylim([min([ESI_filtered; MMI_filtered])-1, max([ESI_filtered; MMI_filtered]) + 1]);
 yticks(0:1:10);
 
 hold off;
+
 
 % Create a tiled layout with 1 row and 2 columns (Second Figure)
 figure;
